@@ -1,0 +1,5 @@
+name: EasyDisplayEditor
+version: '${project.version}'
+main: com.kamesuta.easydisplayeditor.EasyDisplayEditor
+api-version: 1.20
+authors: [Kamesuta]
