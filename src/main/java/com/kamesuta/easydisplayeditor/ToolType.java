@@ -50,7 +50,9 @@ public enum ToolType {
 
     ;
 
-    /** アイテムを作成 */
+    /**
+     * アイテムを作成
+     */
     public ItemStack createItem() {
         // 棒をつくる
         ItemStack item = new ItemStack(Material.STICK);
@@ -86,7 +88,16 @@ public enum ToolType {
             return NONE;
         }
 
-        ItemStack itemStack = event.getItem();
+        return fromItemStack(event.getItem());
+    }
+
+    /**
+     * アイテムからツールを取得する
+     *
+     * @param itemStack アイテム
+     * @return ツール
+     */
+    public static ToolType fromItemStack(ItemStack itemStack) {
         if (itemStack == null) {
             return NONE;
         }
@@ -113,6 +124,7 @@ public enum ToolType {
 
     /**
      * 名前からツールを取得する
+     *
      * @param name 名前
      * @return ツール
      */
