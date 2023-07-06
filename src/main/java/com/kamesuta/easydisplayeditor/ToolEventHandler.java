@@ -46,8 +46,8 @@ public class ToolEventHandler implements Listener {
         });
     }
 
-    private Location startPos;
-    private Location endPos;
+    public static Location startPos;
+    public static Location endPos;
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {

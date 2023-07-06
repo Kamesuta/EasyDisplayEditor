@@ -1,5 +1,6 @@
 package com.kamesuta.easydisplayeditor;
 
+import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
@@ -135,20 +136,39 @@ public class PlayerSession {
     public void grabTool() {
         // Grab中の場合
         if (activeTool != ToolType.GRAB) {
-            // Grab位置を更新する
-            Matrix4f grabMatrixInvert = MatrixUtils.getLocationMatrix(player.getEyeLocation()).invert();
+            // Zero -> Player
+            Matrix4f playerMatrix = MatrixUtils.getLocationMatrix(player.getEyeLocation());
 
             // Grab初期位置を記録
             for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
                 BlockDisplay display = entry.getKey();
 
-                // プレイヤーからの相対位置を取得
-                Matrix4f matrix4f = MatrixUtils.getTransformationMatrix(display.getTransformation())
-                        .mul(MatrixUtils.getLocationMatrix(display.getLocation()))
-                        .mul(grabMatrixInvert);
+                // Zero -> Display
+                Matrix4f displayMatrix = MatrixUtils.getLocationMatrix(display.getLocation());
+                // Display -> DisplayLocal
+                Matrix4f displayLocalMatrix = MatrixUtils.getTransformationMatrix(display.getTransformation());
+
+                // Player -> DisplayLocal
+                Matrix4f offsetMatrix = new Matrix4f()
+                        .mul(new Matrix4f(playerMatrix).invert())
+                        .mul(new Matrix4f(displayMatrix))
+                        .mul(new Matrix4f(displayLocalMatrix))
+                        ;
+
+
+                // (0, 0, 1)をデバッグ表示
+                Matrix4f debugMatrix = new Matrix4f(offsetMatrix);
+                Vector3f start = debugMatrix.transformPosition(new Vector3f(0, 0, 0));
+                Vector3f end = debugMatrix.transformPosition(new Vector3f(0, 0, 1));
+                ToolEventHandler.endPos = new Location(player.getWorld(), 0, 0, 0).add(Vector.fromJOML(end));
+                ToolEventHandler.startPos = new Location(player.getWorld(), 0, 0, 0).add(Vector.fromJOML(start));
+//                ToolEventHandler.endPos = display.getLocation().add(Vector.fromJOML(end));
+//                ToolEventHandler.startPos = display.getLocation().add(Vector.fromJOML(start));
+//                ToolEventHandler.startPos = Vector.fromJOML(start).toLocation(player.getWorld());
+//                ToolEventHandler.endPos = Vector.fromJOML(end).toLocation(player.getWorld());
 
                 // 記録する
-                entry.setValue(matrix4f);
+                entry.setValue(offsetMatrix);
             }
 
             // Grab中にする
@@ -156,8 +176,9 @@ public class PlayerSession {
         } else {
             // Grab初期位置をリセット
             for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
-                // Transformationオフセットを位置に反映する
                 BlockDisplay display = entry.getKey();
+
+                // Transformationオフセットを位置に反映する
                 Transformation transformation = display.getTransformation();
                 display.teleport(display.getLocation().add(Vector.fromJOML(transformation.getTranslation())));
                 transformation.getTranslation().set(0, 0, 0);
@@ -181,18 +202,28 @@ public class PlayerSession {
             return;
         }
 
-        // Grab位置を取得する
-        Matrix4f grabMatrix = MatrixUtils.getLocationMatrix(player.getEyeLocation());
+        // Zero -> Player
+        Matrix4f playerMatrix = MatrixUtils.getLocationMatrix(player.getEyeLocation());
 
         // Grab対象を更新する
         for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
             BlockDisplay display = entry.getKey();
 
-            // 姿勢を計算する
-            Matrix4f matrix4f = new Matrix4f(entry.getValue()).mul(grabMatrix);
+            // Player -> DisplayLocal
+            Matrix4f offsetMatrix = entry.getValue();
+
+            // Zero -> Display
+            Matrix4f displayMatrix = MatrixUtils.getLocationMatrix(display.getLocation());
+
+            // Old DisplayLocal -> New DisplayLocal
+            Matrix4f matrix4f = new Matrix4f()
+                    .mul(new Matrix4f(displayMatrix).invert())
+                    .mul(new Matrix4f(playerMatrix))
+                    .mul(new Matrix4f(offsetMatrix))
+                    ;
 
             // 変換を適用する
-            display.setTransformationMatrix(matrix4f.mul(MatrixUtils.getLocationMatrix(display.getLocation()).invert()));
+            display.setTransformationMatrix(matrix4f);
 //            display.setInterpolationDelay(0);
 //            display.setInterpolationDuration(1);
         }

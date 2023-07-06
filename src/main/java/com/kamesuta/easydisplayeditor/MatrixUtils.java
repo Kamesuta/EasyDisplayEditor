@@ -33,7 +33,7 @@ public class MatrixUtils {
      * @return 回転
      */
     public static Quaternionf getLocationRotation(Location location) {
-        return new Quaternionf(new AxisAngle4f((float) Math.toRadians(location.getYaw()), 0, 1, 0))
+        return new Quaternionf(new AxisAngle4f((float) Math.toRadians(location.getYaw()), 0, -1, 0))
                 .mul(new Quaternionf(new AxisAngle4f((float) Math.toRadians(location.getPitch()), 1, 0, 0)));
     }
 
@@ -46,6 +46,6 @@ public class MatrixUtils {
     public static Matrix4f getLocationMatrix(Location location) {
         Vector3f position = location.toVector().toVector3f();
         Quaternionf rotation = getLocationRotation(location);
-        return new Matrix4f().rotate(rotation).translate(position);
+        return new Matrix4f().translate(position).rotate(rotation);
     }
 }
