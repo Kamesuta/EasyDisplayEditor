@@ -5,6 +5,7 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class ToolEventHandler implements Listener {
@@ -34,14 +35,10 @@ public class ToolEventHandler implements Listener {
         PlayerSession.sessions.values().forEach(session -> {
             ToolType type = session.activeTool;
             switch (type) {
-                case GRAB: {
-                    session.tickGrabTool();
+                case SELECTOR -> session.tickAreaSelectorTool();
+                case GRAB -> session.tickGrabTool();
+                default -> {
                 }
-                break;
-                case ROTATE:
-                    break;
-                default:
-                    break;
             }
         });
     }
@@ -59,6 +56,8 @@ public class ToolEventHandler implements Listener {
         if (type == ToolType.NONE) {
             return;
         }
+        // キャンセル
+        event.setCancelled(true);
 
         // プレイヤーセッションを取得
         PlayerSession session = PlayerSession.get(player);
@@ -69,26 +68,22 @@ public class ToolEventHandler implements Listener {
 
         // ツールの種類によって処理を分ける
         switch (type) {
-            case SELECTOR: {
-                // 選択
-                session.selectorTool();
+            case SELECTOR -> {
+                if (event.getAction() == Action.LEFT_CLICK_BLOCK
+                        || event.getAction() == Action.LEFT_CLICK_AIR) {
+                    // 左クリックの場合範囲選択
+                    session.areaSelectorTool();
+                } else {
+                    // 右クリックの場合選択
+                    session.selectorTool();
+                }
             }
-            break;
-            case GRAB: {
+            case GRAB -> {
                 // 選択
                 session.grabTool();
             }
-            break;
-            case DOT_PIVOT:
-                break;
-            case LINE_PIVOT:
-                break;
-            case ROTATE:
-                break;
-            case SCALE:
-                break;
-            default:
-                break;
+            default -> {
+            }
         }
     }
 }

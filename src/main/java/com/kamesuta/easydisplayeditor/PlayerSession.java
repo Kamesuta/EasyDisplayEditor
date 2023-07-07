@@ -1,5 +1,7 @@
 package com.kamesuta.easydisplayeditor;
 
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
@@ -8,6 +10,7 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.*;
@@ -45,6 +48,16 @@ public class PlayerSession {
      * 現在有効なツール
      */
     public ToolType activeTool = ToolType.NONE;
+
+    /**
+     * 選択開始位置
+     */
+    private Vector3f selectionStart;
+
+    /**
+     * 選択を表示するブロックディスプレイ
+     */
+    private BlockDisplay selectionDisplay;
 
     /**
      * コンストラクター
@@ -138,12 +151,80 @@ public class PlayerSession {
         }
     }
 
+    public void areaSelectorTool() {
+        if (activeTool != ToolType.SELECTOR) {
+            // 選択中ではない場合
+
+            // 選択開始位置を記録
+            Location selStart = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(3));
+            selectionStart = selStart.toVector().toVector3f();
+
+            // 選択範囲を表示する[
+            if (selectionDisplay != null) {
+                selectionDisplay.teleport(selStart);
+            } else {
+                selectionDisplay = player.getWorld().spawn(selStart, BlockDisplay.class);
+            }
+            selectionDisplay.setBlock(Material.LIGHT_BLUE_STAINED_GLASS.createBlockData());
+            selectionDisplay.setTransformation(new Transformation(
+                    new Vector3f(0, 0, 0),
+                    new Quaternionf(),
+                    new Vector3f(0, 0, 0),
+                    new Quaternionf()
+            ));
+            
+            // 選択中にする
+            activeTool = ToolType.SELECTOR;
+        } else {
+            // 選択中の場合
+
+            // 選択範囲を非表示にする
+            selectionDisplay.remove();
+            selectionDisplay = null;
+
+            // 選択中を解除する
+            activeTool = ToolType.NONE;
+        }
+
+    }
+
+    public void tickAreaSelectorTool() {
+        if (selectionDisplay == null) {
+            return;
+        }
+
+        // 選択開始位置から現在位置までの範囲を選択する
+        Vector3f selectionEnd = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(3)).toVector().toVector3f();
+        Vector3f min = new Vector3f(selectionStart).min(selectionEnd);
+        Vector3f max = new Vector3f(selectionStart).max(selectionEnd);
+
+        // 範囲内のエンティティを光らせる
+        BoundingBox box = new BoundingBox(min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
+        player.getWorld().getNearbyEntities(box)
+                .stream()
+                .filter(entity -> entity instanceof BlockDisplay)
+                .map(entity -> (BlockDisplay) entity)
+                .forEach(display -> display.setGlowing(true));
+
+        // 選択範囲を表示する
+        Vector3f displayPosition = selectionDisplay.getLocation().toVector().toVector3f();
+        selectionDisplay.setTransformation(new Transformation(
+                new Vector3f(min).sub(displayPosition),
+                new Quaternionf(),
+                new Vector3f(max).sub(min),
+                new Quaternionf()
+        ));
+        selectionDisplay.setInterpolationDelay(0);
+        selectionDisplay.setInterpolationDuration(1);
+    }
+
     /**
      * つかみツール
      */
     public void grabTool() {
-        // Grab中の場合
         if (activeTool != ToolType.GRAB) {
+            // Grab中ではない場合
+
             // (Zero -> Player)' = Player -> Zero
             Matrix4f playerMatrixInvert = MatrixUtils.getLocationMatrix(player.getEyeLocation()).invert();
 
@@ -169,6 +250,8 @@ public class PlayerSession {
             // Grab中にする
             activeTool = ToolType.GRAB;
         } else {
+            // Grab中の場合
+
             // Grab初期位置をリセット
             for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
                 BlockDisplay display = entry.getKey();
@@ -192,11 +275,6 @@ public class PlayerSession {
      * つかみツールのTick処理
      */
     public void tickGrabTool() {
-        // Grab中でない場合
-        if (activeTool != ToolType.GRAB) {
-            return;
-        }
-
         // Zero -> Player
         Matrix4f playerMatrix = MatrixUtils.getLocationMatrix(player.getEyeLocation());
 
