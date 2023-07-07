@@ -1,6 +1,5 @@
 package com.kamesuta.easydisplayeditor;
 
-import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
@@ -60,8 +59,10 @@ public class PlayerSession {
      * セレクターツール
      */
     public void selectorTool() {
-        // 半径
-        double radius = 16;
+        // 距離
+        double radius = 32;
+        double radiusEye = radius + 4;
+
         // 半径16ブロックの範囲のブロックディスプレイを選択する
         // TODO: BlockDisplay以外のDisplayも選択できるようにする
         // TODO: もうちょい実体だけが遠いオブジェクトも選択できるようにする
@@ -74,7 +75,6 @@ public class PlayerSession {
         record RayResult(BlockDisplay display, RayTraceResult result, double eyeDistance) {
         }
         // 目線上にあるブロックディスプレイを選択する
-        double radiusEye = 6;
         Vector3f eyeSource = player.getEyeLocation().toVector().toVector3f();
         Vector3f eyeTarget = new Vector3f(eyeSource).add(player.getEyeLocation().getDirection().multiply(radiusEye).toVector3f());
         Optional<RayResult> hits = displays.stream()
@@ -113,6 +113,14 @@ public class PlayerSession {
                 .min(
                         Comparator.comparingDouble(rayResult -> rayResult.eyeDistance)
                 );
+
+        // Shiftを押していなかったら選択をクリア
+        if (!player.isSneaking()) {
+            for (BlockDisplay display : selected.keySet()) {
+                display.setGlowing(false);
+            }
+            selected.clear();
+        }
 
         // 一番近いブロックディスプレイを選択する
         if (hits.isEmpty()) {
