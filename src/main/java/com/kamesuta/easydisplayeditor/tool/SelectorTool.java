@@ -74,6 +74,12 @@ public class SelectorTool implements Tool {
         } else {
             // 選択中ではない場合
 
+            // Shiftを押していなかったら選択をクリア
+            if (!player.isSneaking()) {
+                session.selected.forEach(display -> display.setGlowing(false));
+                session.selected.clear();
+            }
+
             // 選択開始位置を記録
             Location selStart = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(FRONT_OFFSET));
             selectionStart = selStart.toVector().toVector3f();

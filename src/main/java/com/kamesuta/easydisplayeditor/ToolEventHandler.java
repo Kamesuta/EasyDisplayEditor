@@ -38,21 +38,23 @@ public class ToolEventHandler implements Listener {
         // プレイヤー
         Player player = event.getPlayer();
 
-        // クリックの種類を取得
-        Action action = event.getAction();
-        if (action != Action.RIGHT_CLICK_AIR
-                && action != Action.RIGHT_CLICK_BLOCK) {
-            // 右クリック以外は何もしない
-            return;
-        }
-
         // ツールが有効でない場合は何もしない
         ToolType type = ToolType.fromItemStack(player.getInventory().getItemInMainHand());
         if (type == ToolType.NONE) {
             return;
         }
+        // クリックの種類を取得
+        Action action = event.getAction();
+        // 土や圧力板などのクリックは何もしない
+        if (action == Action.PHYSICAL) {
+            return;
+        }
         // キャンセル
         event.setCancelled(true);
+        // 右クリック以外は何もしない
+        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
 
         // プレイヤーセッションを取得
         PlayerSession session = PlayerSession.get(player);
