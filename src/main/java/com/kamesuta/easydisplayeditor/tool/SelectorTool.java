@@ -57,17 +57,8 @@ public class SelectorTool implements Tool {
         if (isSelecting) {
             // 選択中の場合
 
-            // 選択範囲を非表示にする
-            if (selectionDisplay != null) {
-                selectionDisplay.remove();
-                selectionDisplay = null;
-            }
-
-            // 選択を反映する
-            session.selected.addAll(selected);
-
-            // 選択中を解除する
-            isSelecting = false;
+            // 選択範囲解除
+            deselect(true);
         } else {
             // 選択中ではない場合
 
@@ -94,20 +85,46 @@ public class SelectorTool implements Tool {
         }
     }
 
-    @Override
-    public void onFinish() {
+    /**
+     * 選択範囲解除
+     *
+     * @param apply 選択範囲を反映するかどうか
+     */
+    private void deselect(boolean apply) {
         // 選択範囲を非表示にする
         if (selectionDisplay != null) {
             selectionDisplay.remove();
             selectionDisplay = null;
         }
 
+        // 反映する場合
+        if (apply) {
+            // 選択を反映する
+            session.selected.addAll(selected);
+        } else {
+            // 選択を破棄する
+            selected.forEach(display -> display.setGlowing(false));
+        }
+        selected = Collections.emptyList();
+
         // 選択中を解除する
         isSelecting = false;
     }
 
     @Override
+    public void onFinish() {
+        // 選択範囲解除
+        deselect(false);
+    }
+
+    @Override
     public void onRightClick() {
+        // 選択範囲解除
+        if (isSelecting) {
+            deselect(true);
+            return;
+        }
+
         // 距離
         double radius = 32;
         double radiusEye = radius + 4;
