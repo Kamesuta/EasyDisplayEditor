@@ -136,8 +136,8 @@ public class PlayerSession {
     public void grabTool() {
         // Grab中の場合
         if (activeTool != ToolType.GRAB) {
-            // Zero -> Player
-            Matrix4f playerMatrix = MatrixUtils.getLocationMatrix(player.getEyeLocation());
+            // (Zero -> Player)' = Player -> Zero
+            Matrix4f playerMatrixInvert = MatrixUtils.getLocationMatrix(player.getEyeLocation()).invert();
 
             // Grab初期位置を記録
             for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
@@ -150,22 +150,9 @@ public class PlayerSession {
 
                 // Player -> DisplayLocal
                 Matrix4f offsetMatrix = new Matrix4f()
-                        .mul(new Matrix4f(playerMatrix).invert())
-                        .mul(new Matrix4f(displayMatrix))
-                        .mul(new Matrix4f(displayLocalMatrix))
-                        ;
-
-
-                // (0, 0, 1)をデバッグ表示
-                Matrix4f debugMatrix = new Matrix4f(offsetMatrix);
-                Vector3f start = debugMatrix.transformPosition(new Vector3f(0, 0, 0));
-                Vector3f end = debugMatrix.transformPosition(new Vector3f(0, 0, 1));
-                ToolEventHandler.endPos = new Location(player.getWorld(), 0, 0, 0).add(Vector.fromJOML(end));
-                ToolEventHandler.startPos = new Location(player.getWorld(), 0, 0, 0).add(Vector.fromJOML(start));
-//                ToolEventHandler.endPos = display.getLocation().add(Vector.fromJOML(end));
-//                ToolEventHandler.startPos = display.getLocation().add(Vector.fromJOML(start));
-//                ToolEventHandler.startPos = Vector.fromJOML(start).toLocation(player.getWorld());
-//                ToolEventHandler.endPos = Vector.fromJOML(end).toLocation(player.getWorld());
+                        .mul(playerMatrixInvert)
+                        .mul(displayMatrix)
+                        .mul(displayLocalMatrix);
 
                 // 記録する
                 entry.setValue(offsetMatrix);
@@ -212,20 +199,19 @@ public class PlayerSession {
             // Player -> DisplayLocal
             Matrix4f offsetMatrix = entry.getValue();
 
-            // Zero -> Display
-            Matrix4f displayMatrix = MatrixUtils.getLocationMatrix(display.getLocation());
+            // (Zero -> Display)' = Display -> Zero
+            Matrix4f displayMatrixInvert = MatrixUtils.getLocationMatrix(display.getLocation()).invert();
 
             // Old DisplayLocal -> New DisplayLocal
             Matrix4f matrix4f = new Matrix4f()
-                    .mul(new Matrix4f(displayMatrix).invert())
-                    .mul(new Matrix4f(playerMatrix))
-                    .mul(new Matrix4f(offsetMatrix))
-                    ;
+                    .mul(displayMatrixInvert)
+                    .mul(playerMatrix)
+                    .mul(offsetMatrix);
 
             // 変換を適用する
             display.setTransformationMatrix(matrix4f);
-//            display.setInterpolationDelay(0);
-//            display.setInterpolationDuration(1);
+            display.setInterpolationDelay(0);
+            display.setInterpolationDuration(1);
         }
     }
 }
