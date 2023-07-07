@@ -18,36 +18,22 @@ public class PlayerSession {
      * プレイヤーのセッションデータ
      */
     public static final Map<UUID, PlayerSession> sessions = new HashMap<>();
-
-    /**
-     * プレイヤーのセッションを取得する
-     *
-     * @param player プレイヤー
-     * @return プレイヤーのセッション
-     */
-    public static PlayerSession get(Player player) {
-        return sessions.computeIfAbsent(player.getUniqueId(), (s) -> new PlayerSession(player));
-    }
-
     /**
      * 選択中のブロックディスプレイ -> 最初の行列
      */
     public final Map<BlockDisplay, Matrix4f> selected = new HashMap<>();
-
     /**
      * プレイヤー
      */
     public final Player player;
-
-    /**
-     * 現在有効なツール
-     */
-    public ToolType activeToolType = ToolType.NONE;
-
     /**
      * ツール
      */
     public final Map<ToolType, Tool> tools;
+    /**
+     * 現在有効なツール
+     */
+    public ToolType activeToolType = ToolType.NONE;
 
     /**
      * コンストラクター
@@ -57,6 +43,16 @@ public class PlayerSession {
     public PlayerSession(Player player) {
         this.player = player;
         this.tools = ToolType.createTools(this);
+    }
+
+    /**
+     * プレイヤーのセッションを取得する
+     *
+     * @param player プレイヤー
+     * @return プレイヤーのセッション
+     */
+    public static PlayerSession get(Player player) {
+        return sessions.computeIfAbsent(player.getUniqueId(), (s) -> new PlayerSession(player));
     }
 
     /**

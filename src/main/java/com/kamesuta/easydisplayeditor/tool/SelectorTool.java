@@ -1,8 +1,8 @@
 package com.kamesuta.easydisplayeditor.tool;
 
+import com.kamesuta.easydisplayeditor.PlayerSession;
 import com.kamesuta.easydisplayeditor.util.BlockOutline;
 import com.kamesuta.easydisplayeditor.util.MatrixUtils;
-import com.kamesuta.easydisplayeditor.PlayerSession;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
@@ -25,25 +25,22 @@ import java.util.Optional;
  */
 public class SelectorTool implements Tool {
     private final PlayerSession session;
-
-    public SelectorTool(PlayerSession session) {
-        this.session = session;
-    }
-
     /**
      * 選択中かどうか
      */
     private boolean isSelecting = false;
-
     /**
      * 選択開始位置
      */
     private Vector3f selectionStart;
-
     /**
      * 選択を表示するブロックディスプレイ
      */
     private BlockDisplay selectionDisplay;
+
+    public SelectorTool(PlayerSession session) {
+        this.session = session;
+    }
 
     @Override
     public ToolType getType() {

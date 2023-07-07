@@ -1,7 +1,7 @@
 package com.kamesuta.easydisplayeditor.tool;
 
-import com.kamesuta.easydisplayeditor.util.MatrixUtils;
 import com.kamesuta.easydisplayeditor.PlayerSession;
+import com.kamesuta.easydisplayeditor.util.MatrixUtils;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
@@ -15,15 +15,14 @@ import java.util.Map;
  */
 public class GrabTool implements Tool {
     private final PlayerSession session;
-
-    public GrabTool(PlayerSession session) {
-        this.session = session;
-    }
-
     /**
      * 選択中かどうか
      */
     private boolean isGrabbing = false;
+
+    public GrabTool(PlayerSession session) {
+        this.session = session;
+    }
 
     @Override
     public ToolType getType() {

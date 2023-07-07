@@ -53,6 +53,10 @@ public enum ToolType {
     ;
 
     /**
+     * ツールの種類キー
+     */
+    private static final NamespacedKey KEY = new NamespacedKey(EasyDisplayEditor.instance, "edetool");
+    /**
      * ツールを作成
      */
     final Function<PlayerSession, Tool> toolFactory;
@@ -64,29 +68,6 @@ public enum ToolType {
     ToolType(Function<PlayerSession, Tool> factory) {
         toolFactory = factory;
     }
-
-    /**
-     * アイテムを作成
-     */
-    public ItemStack createItem() {
-        // 棒をつくる
-        ItemStack item = new ItemStack(Material.STICK);
-        // ItemMetaを作成
-        ItemMeta meta = item.getItemMeta();
-        // ツールの種類を設定
-        Objects.requireNonNull(meta).getPersistentDataContainer().set(KEY, PersistentDataType.STRING, name());
-        // 名前を設定
-        meta.setDisplayName("§6" + name());
-        // ItemMetaを設定
-        item.setItemMeta(meta);
-        // アイテムを返す
-        return item;
-    }
-
-    /**
-     * ツールの種類キー
-     */
-    private static final NamespacedKey KEY = new NamespacedKey(EasyDisplayEditor.instance, "edetool");
 
     /**
      * イベントからツールを取得する
@@ -162,5 +143,23 @@ public enum ToolType {
         return Arrays.stream(ToolType.values())
                 .filter(type -> type.toolFactory != null)
                 .collect(Collectors.toMap(Function.identity(), type -> type.toolFactory.apply(session)));
+    }
+
+    /**
+     * アイテムを作成
+     */
+    public ItemStack createItem() {
+        // 棒をつくる
+        ItemStack item = new ItemStack(Material.STICK);
+        // ItemMetaを作成
+        ItemMeta meta = item.getItemMeta();
+        // ツールの種類を設定
+        Objects.requireNonNull(meta).getPersistentDataContainer().set(KEY, PersistentDataType.STRING, name());
+        // 名前を設定
+        meta.setDisplayName("§6" + name());
+        // ItemMetaを設定
+        item.setItemMeta(meta);
+        // アイテムを返す
+        return item;
     }
 }

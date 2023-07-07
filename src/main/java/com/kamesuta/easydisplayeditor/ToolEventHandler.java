@@ -14,6 +14,9 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
  * ツールイベントハンドラー
  */
 public class ToolEventHandler implements Listener {
+    public static Location startPos;
+    public static Location endPos;
+
     /**
      * Tickの処理
      */
@@ -28,9 +31,6 @@ public class ToolEventHandler implements Listener {
         // プレイヤーごとに更新
         PlayerSession.sessions.values().forEach(PlayerSession::onTick);
     }
-
-    public static Location startPos;
-    public static Location endPos;
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
