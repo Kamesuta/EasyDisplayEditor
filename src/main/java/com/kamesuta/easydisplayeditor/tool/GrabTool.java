@@ -8,6 +8,7 @@ import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -19,6 +20,10 @@ public class GrabTool implements Tool {
      * 選択中かどうか
      */
     private boolean isGrabbing = false;
+    /**
+     * 選択中のブロックディスプレイ -> 最初の行列
+     */
+    private final Map<BlockDisplay, Matrix4f> selected = new HashMap<>();
 
     public GrabTool(PlayerSession session) {
         this.session = session;
@@ -38,7 +43,7 @@ public class GrabTool implements Tool {
             // Grab中の場合
 
             // Grab初期位置をリセット
-            for (Map.Entry<BlockDisplay, Matrix4f> entry : session.selected.entrySet()) {
+            for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
                 BlockDisplay display = entry.getKey();
 
                 // Transformationオフセットを位置に反映する
@@ -59,10 +64,11 @@ public class GrabTool implements Tool {
             // (Zero -> Player)' = Player -> Zero
             Matrix4f playerMatrixInvert = MatrixUtils.getLocationMatrix(player.getEyeLocation()).invert();
 
-            // Grab初期位置を記録
-            for (Map.Entry<BlockDisplay, Matrix4f> entry : session.selected.entrySet()) {
-                BlockDisplay display = entry.getKey();
+            // 一旦クリア
+            selected.clear();
 
+            // Grab初期位置を記録
+            for (BlockDisplay display : session.selected) {
                 // Zero -> Display
                 Matrix4f displayMatrix = MatrixUtils.getLocationMatrix(display.getLocation());
                 // Display -> DisplayLocal
@@ -75,7 +81,7 @@ public class GrabTool implements Tool {
                         .mul(displayLocalMatrix);
 
                 // 記録する
-                entry.setValue(offsetMatrix);
+                selected.put(display, offsetMatrix);
             }
 
             // Grab中にする
@@ -98,7 +104,7 @@ public class GrabTool implements Tool {
         Matrix4f playerMatrix = MatrixUtils.getLocationMatrix(player.getEyeLocation());
 
         // Grab対象を更新する
-        for (Map.Entry<BlockDisplay, Matrix4f> entry : session.selected.entrySet()) {
+        for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
             BlockDisplay display = entry.getKey();
 
             // Player -> DisplayLocal

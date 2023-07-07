@@ -4,11 +4,8 @@ import com.kamesuta.easydisplayeditor.tool.Tool;
 import com.kamesuta.easydisplayeditor.tool.ToolType;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
-import org.joml.Matrix4f;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * プレイヤーのセッション
@@ -19,9 +16,9 @@ public class PlayerSession {
      */
     public static final Map<UUID, PlayerSession> sessions = new HashMap<>();
     /**
-     * 選択中のブロックディスプレイ -> 最初の行列
+     * 選択中のブロックディスプレイ
      */
-    public final Map<BlockDisplay, Matrix4f> selected = new HashMap<>();
+    public final Set<BlockDisplay> selected = new HashSet<>();
     /**
      * プレイヤー
      */
@@ -117,5 +114,19 @@ public class PlayerSession {
         }
 
         activeToolType = toolType;
+    }
+
+    /**
+     * プラグインが無効になったときの処理
+     */
+    public void onDisable() {
+        // ツールの終了処理
+        Tool tool = tools.get(activeToolType);
+        if (tool != null) {
+            tool.onFinish();
+        }
+
+        // 選択中のブロックディスプレイの発光を消す
+        selected.forEach(display -> display.setGlowing(false));
     }
 }

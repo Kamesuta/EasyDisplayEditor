@@ -38,6 +38,9 @@ public final class EasyDisplayEditor extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+
+        // プレイヤーごとに無効化
+        PlayerSession.sessions.values().forEach(PlayerSession::onDisable);
     }
 
     @Override

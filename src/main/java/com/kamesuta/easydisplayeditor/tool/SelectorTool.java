@@ -16,9 +16,7 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 選択ツール
@@ -37,6 +35,10 @@ public class SelectorTool implements Tool {
      * 選択を表示するブロックディスプレイ
      */
     private BlockDisplay selectionDisplay;
+    /**
+     * 選択中のブロックディスプレイ
+     */
+    private List<BlockDisplay> selected = Collections.emptyList();
 
     public SelectorTool(PlayerSession session) {
         this.session = session;
@@ -60,6 +62,9 @@ public class SelectorTool implements Tool {
                 selectionDisplay.remove();
                 selectionDisplay = null;
             }
+
+            // 選択を反映する
+            session.selected.addAll(selected);
 
             // 選択中を解除する
             isSelecting = false;
@@ -162,9 +167,7 @@ public class SelectorTool implements Tool {
 
         // Shiftを押していなかったら選択をクリア
         if (!player.isSneaking()) {
-            for (BlockDisplay display : session.selected.keySet()) {
-                display.setGlowing(false);
-            }
+            session.selected.forEach(display -> display.setGlowing(false));
             session.selected.clear();
         }
 
@@ -175,12 +178,12 @@ public class SelectorTool implements Tool {
 
         // 選択中に追加/削除をトグル
         BlockDisplay display = hits.get().display;
-        if (session.selected.containsKey(display)) {
+        if (session.selected.contains(display)) {
             display.setGlowing(false);
             session.selected.remove(display);
         } else {
             display.setGlowing(true);
-            session.selected.put(display, null);
+            session.selected.add(display);
         }
     }
 
@@ -200,11 +203,22 @@ public class SelectorTool implements Tool {
 
         // 範囲内のエンティティを光らせる
         BoundingBox box = new BoundingBox(min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
-        player.getWorld().getNearbyEntities(box)
+        List<BlockDisplay> displays = player.getWorld().getNearbyEntities(box)
                 .stream()
                 .filter(entity -> entity instanceof BlockDisplay)
+                .filter(entity -> entity != selectionDisplay)
                 .map(entity -> (BlockDisplay) entity)
+                .toList();
+        // 新規に追加されたエンティティを光らせる
+        displays.stream()
+                .filter(display -> !selected.contains(display))
                 .forEach(display -> display.setGlowing(true));
+        // 削除されたエンティティを光らせない
+        selected.stream()
+                .filter(display -> !displays.contains(display) && !session.selected.contains(display))
+                .forEach(display -> display.setGlowing(false));
+        // 選択中を更新
+        selected = displays;
 
         // 選択範囲を表示する
         Vector3f displayPosition = selectionDisplay.getLocation().toVector().toVector3f();
