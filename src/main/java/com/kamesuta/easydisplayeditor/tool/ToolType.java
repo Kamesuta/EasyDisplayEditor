@@ -1,5 +1,7 @@
-package com.kamesuta.easydisplayeditor;
+package com.kamesuta.easydisplayeditor.tool;
 
+import com.kamesuta.easydisplayeditor.EasyDisplayEditor;
+import com.kamesuta.easydisplayeditor.PlayerSession;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.block.Action;
@@ -9,7 +11,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * ツールの種類
@@ -22,15 +28,11 @@ public enum ToolType {
     /**
      * 選択 (左クリック: 選択解除、右クリック: 選択)
      */
-    SELECTOR,
-    /**
-     * 範囲選択
-     */
-    RECT_SELECTOR,
+    SELECTOR(SelectorTool::new),
     /**
      * 移動、回転 (左クリック: ピボットに従って一方向移動回転、右クリック: 全方向移動回転)
      */
-    GRAB,
+    GRAB(GrabTool::new),
     /**
      * ドットピボット (左クリック: ピボットを解除、右クリック: ピボットを設定、Shiftでスナップ)
      */
@@ -49,6 +51,19 @@ public enum ToolType {
     SCALE,
 
     ;
+
+    /**
+     * ツールを作成
+     */
+    final Function<PlayerSession, Tool> toolFactory;
+
+    ToolType() {
+        toolFactory = null;
+    }
+
+    ToolType(Function<PlayerSession, Tool> factory) {
+        toolFactory = factory;
+    }
 
     /**
      * アイテムを作成
@@ -136,5 +151,16 @@ public enum ToolType {
         }
 
         return null;
+    }
+
+    /**
+     * ツールを作成する
+     *
+     * @return ツール
+     */
+    public static Map<ToolType, Tool> createTools(PlayerSession session) {
+        return Arrays.stream(ToolType.values())
+                .filter(type -> type.toolFactory != null)
+                .collect(Collectors.toMap(Function.identity(), type -> type.toolFactory.apply(session)));
     }
 }

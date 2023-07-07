@@ -1,5 +1,6 @@
 package com.kamesuta.easydisplayeditor;
 
+import com.kamesuta.easydisplayeditor.tool.ToolType;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -31,7 +32,6 @@ public final class EasyDisplayEditor extends JavaPlugin {
         ToolEventHandler handler = new ToolEventHandler();
         getServer().getPluginManager().registerEvents(handler, this);
         getServer().getScheduler().runTaskTimer(this, handler::tick, 0, 1);
-        getServer().getScheduler().runTaskTimer(this, handler::tickSelection, 0, 10);
     }
 
     @Override
