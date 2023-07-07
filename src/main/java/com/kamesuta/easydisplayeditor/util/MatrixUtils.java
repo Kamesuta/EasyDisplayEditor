@@ -1,4 +1,4 @@
-package com.kamesuta.easydisplayeditor;
+package com.kamesuta.easydisplayeditor.util;
 
 import org.bukkit.Location;
 import org.bukkit.util.Transformation;

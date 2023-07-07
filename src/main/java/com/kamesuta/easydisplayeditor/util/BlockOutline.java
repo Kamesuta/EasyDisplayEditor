@@ -1,4 +1,4 @@
-package com.kamesuta.easydisplayeditor;
+package com.kamesuta.easydisplayeditor.util;
 
 import com.comphenix.protocol.utility.MinecraftReflection;
 import org.bukkit.World;

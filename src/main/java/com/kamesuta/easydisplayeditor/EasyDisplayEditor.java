@@ -1,6 +1,7 @@
 package com.kamesuta.easydisplayeditor;
 
 import com.kamesuta.easydisplayeditor.tool.ToolType;
+import com.kamesuta.easydisplayeditor.util.BlockOutline;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

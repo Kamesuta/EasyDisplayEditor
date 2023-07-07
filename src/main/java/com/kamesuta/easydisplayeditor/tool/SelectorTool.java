@@ -1,7 +1,7 @@
 package com.kamesuta.easydisplayeditor.tool;
 
-import com.kamesuta.easydisplayeditor.BlockOutline;
-import com.kamesuta.easydisplayeditor.MatrixUtils;
+import com.kamesuta.easydisplayeditor.util.BlockOutline;
+import com.kamesuta.easydisplayeditor.util.MatrixUtils;
 import com.kamesuta.easydisplayeditor.PlayerSession;
 import org.bukkit.Location;
 import org.bukkit.Material;

@@ -1,6 +1,6 @@
 package com.kamesuta.easydisplayeditor.tool;
 
-import com.kamesuta.easydisplayeditor.MatrixUtils;
+import com.kamesuta.easydisplayeditor.util.MatrixUtils;
 import com.kamesuta.easydisplayeditor.PlayerSession;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
