@@ -4,8 +4,6 @@ import com.kamesuta.easydisplayeditor.EasyDisplayEditor;
 import com.kamesuta.easydisplayeditor.PlayerSession;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -67,24 +65,6 @@ public enum ToolType {
 
     ToolType(Function<PlayerSession, Tool> factory) {
         toolFactory = factory;
-    }
-
-    /**
-     * イベントからツールを取得する
-     *
-     * @param event イベント
-     * @return ツール
-     */
-    public static ToolType fromEvent(PlayerInteractEvent event) {
-        Action action = event.getAction();
-        if (action != Action.RIGHT_CLICK_AIR
-                && action != Action.RIGHT_CLICK_BLOCK
-                && action != Action.LEFT_CLICK_AIR
-                && action != Action.LEFT_CLICK_BLOCK) {
-            return NONE;
-        }
-
-        return fromItemStack(event.getItem());
     }
 
     /**

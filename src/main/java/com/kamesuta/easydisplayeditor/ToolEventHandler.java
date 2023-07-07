@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 
@@ -37,8 +38,16 @@ public class ToolEventHandler implements Listener {
         // プレイヤー
         Player player = event.getPlayer();
 
-        ToolType type = ToolType.fromEvent(event);
+        // クリックの種類を取得
+        Action action = event.getAction();
+        if (action != Action.RIGHT_CLICK_AIR
+                && action != Action.RIGHT_CLICK_BLOCK) {
+            // 右クリック以外は何もしない
+            return;
+        }
+
         // ツールが有効でない場合は何もしない
+        ToolType type = ToolType.fromItemStack(player.getInventory().getItemInMainHand());
         if (type == ToolType.NONE) {
             return;
         }
@@ -48,16 +57,28 @@ public class ToolEventHandler implements Listener {
         // プレイヤーセッションを取得
         PlayerSession session = PlayerSession.get(player);
 
-        // 左クリックか
-        boolean isLeftClick = event.getAction() == Action.LEFT_CLICK_BLOCK
-                || event.getAction() == Action.LEFT_CLICK_AIR;
+        // 呼び出し
+        session.onRightClick(type);
+    }
+
+    @EventHandler
+    public void onArmSwing(PlayerAnimationEvent event) {
+        // プレイヤー
+        Player player = event.getPlayer();
+
+        // ツールが有効でない場合は何もしない
+        ToolType type = ToolType.fromItemStack(player.getInventory().getItemInMainHand());
+        if (type == ToolType.NONE) {
+            return;
+        }
+        // キャンセル
+        event.setCancelled(true);
+
+        // プレイヤーセッションを取得
+        PlayerSession session = PlayerSession.get(player);
 
         // 呼び出し
-        if (isLeftClick) {
-            session.onLeftClick(type);
-        } else {
-            session.onRightClick(type);
-        }
+        session.onLeftClick(type);
     }
 
     @EventHandler

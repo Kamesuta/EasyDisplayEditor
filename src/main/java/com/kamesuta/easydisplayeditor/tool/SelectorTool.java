@@ -22,6 +22,18 @@ import java.util.*;
  * 選択ツール
  */
 public class SelectorTool implements Tool {
+    /**
+     * ピボットのオフセット
+     */
+    public static final int FRONT_OFFSET = 3;
+    /**
+     * 距離
+     */
+    public static final int SELECT_RADIUS = 32;
+
+    /**
+     * プレイヤーセッション
+     */
     private final PlayerSession session;
     /**
      * 選択中かどうか
@@ -63,7 +75,7 @@ public class SelectorTool implements Tool {
             // 選択中ではない場合
 
             // 選択開始位置を記録
-            Location selStart = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(3));
+            Location selStart = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(FRONT_OFFSET));
             selectionStart = selStart.toVector().toVector3f();
 
             // 選択範囲を表示する[
@@ -125,17 +137,13 @@ public class SelectorTool implements Tool {
             return;
         }
 
-        // 距離
-        double radius = 32;
-        double radiusEye = radius + 4;
-
         // プレイヤー
         Player player = session.player;
 
         // 半径16ブロックの範囲のブロックディスプレイを選択する
         // TODO: BlockDisplay以外のDisplayも選択できるようにする
         Collection<BlockDisplay> displays = player.getWorld()
-                .getNearbyEntities(player.getLocation(), radius, radius, radius,
+                .getNearbyEntities(player.getLocation(), SELECT_RADIUS, SELECT_RADIUS, SELECT_RADIUS,
                         (entity) -> entity instanceof BlockDisplay)
                 .stream().map(entity -> (BlockDisplay) entity).toList();
 
@@ -144,7 +152,7 @@ public class SelectorTool implements Tool {
         }
         // 目線上にあるブロックディスプレイを選択する
         Vector3f eyeSource = player.getEyeLocation().toVector().toVector3f();
-        Vector3f eyeTarget = new Vector3f(eyeSource).add(player.getEyeLocation().getDirection().multiply(radiusEye).toVector3f());
+        Vector3f eyeTarget = new Vector3f(eyeSource).add(player.getEyeLocation().getDirection().multiply(SELECT_RADIUS).toVector3f());
         Optional<RayResult> hits = displays.stream()
                 .map(display -> {
                     // 行列を取得する

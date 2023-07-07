@@ -2,6 +2,7 @@ package com.kamesuta.easydisplayeditor.tool;
 
 import com.kamesuta.easydisplayeditor.PlayerSession;
 import com.kamesuta.easydisplayeditor.util.MatrixUtils;
+import com.kamesuta.easydisplayeditor.util.Pivot;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
@@ -15,6 +16,9 @@ import java.util.Map;
  * つかみツール
  */
 public class GrabTool implements Tool {
+    /**
+     * プレイヤーセッション
+     */
     private final PlayerSession session;
     /**
      * 選択中かどうか
@@ -32,6 +36,28 @@ public class GrabTool implements Tool {
     @Override
     public ToolType getType() {
         return ToolType.GRAB;
+    }
+
+    @Override
+    public void onLeftClick() {
+        if (session.pivot.mode == Pivot.PivotType.NONE) {
+            // ピボットなしの場合
+            if (session.player.isSneaking()) {
+                // スニーク中の場合、線ピボットを配置
+                session.pivot.mode = Pivot.PivotType.LINE;
+            } else {
+                // スニーク中でない場合、点ピボットを配置
+                session.pivot.mode = Pivot.PivotType.POINT;
+            }
+        } else {
+            // ピボットありの場合、ピボットを削除
+            session.pivot.mode = Pivot.PivotType.NONE;
+        }
+
+        // ピボットの座標をプレイヤーの座標に設定
+        session.pivot.setPivot(session.player);
+        // ピボットの表示を更新
+        session.pivot.updateDisplay(session.player);
     }
 
     @Override
