@@ -9,7 +9,6 @@ import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
@@ -54,16 +53,19 @@ public class GrabTool implements Tool {
                     .translate(session.pivot.pivot)
                     .rotate(MatrixUtils.getLocationRotation(player.getEyeLocation()));
             case LINE -> {
-                // pivotDirection = (0, 0, 1) -> line
-                // rotation の axis成分の回転を取り出す
-
+                // プレイヤーの視線ベクトル
                 Vector3f look = player.getEyeLocation().getDirection().toVector3f();
+                // ピボット線(回転軸)のベクトル
                 Vector3f axis = session.pivot.pivotDirection.transform(new Vector3f(0, 0, 1));
-                Vector3f axisLook = new Vector3f(look).sub(new Vector3f(axis).mul(look.dot(axis))).normalize();
+                // プレイヤーの視線ベクトルを回転軸と垂直な平面に射影したベクトル
+                Vector3f lookAxis = new Vector3f(look).sub(new Vector3f(axis).mul(look.dot(axis))).normalize();
+                // ピボット線(回転軸)と垂直な基準ベクトル
                 Vector3f baseAxis = session.pivot.pivotDirection.transform(new Vector3f(1, 0, 0));
-                Vector3f crossAxis = new Vector3f(baseAxis).cross(axisLook).normalize();
-                // baseAxisとaxisLookのなす角を求める
-                float angle = (float) Math.acos(baseAxis.dot(axisLook));
+                // 回転軸と垂直な平面上にある視線ベクトルと基準ベクトルに直交するベクトル
+                Vector3f crossAxis = new Vector3f(baseAxis).cross(lookAxis).normalize();
+                // 回転軸と垂直な平面上にある視線ベクトルと基準ベクトルのなす角
+                float angle = (float) Math.acos(baseAxis.dot(lookAxis));
+                // 軸を中心になす角だけ回転する行列
                 yield new Matrix4f()
                         .translate(session.pivot.pivot)
                         .rotate(new AxisAngle4f(angle, crossAxis));
@@ -174,13 +176,13 @@ public class GrabTool implements Tool {
             Matrix4f displayMatrixInvert = MatrixUtils.getLocationMatrix(display.getLocation()).invert();
 
             // Old DisplayLocal -> New DisplayLocal
-            Matrix4f matrix4f = new Matrix4f()
+            Matrix4f displayLocalMatrix = new Matrix4f()
                     .mul(displayMatrixInvert)
                     .mul(playerMatrix)
                     .mul(offsetMatrix);
 
             // 変換を適用する
-            display.setTransformationMatrix(matrix4f);
+            display.setTransformationMatrix(displayLocalMatrix);
             display.setInterpolationDelay(0);
             display.setInterpolationDuration(1);
         }
