@@ -63,9 +63,11 @@ public class Pivot {
      */
     public void setPivot(Player player) {
         // モードに応じてオフセットを設定
-        Vector3f offset = mode == PivotType.LINE
-                ? new Vector3f(0, -DOWN_OFFSET, 0)
-                : new Vector3f(0, 0, FRONT_OFFSET);
+        Vector3f offset = switch (mode) {
+            case LINE -> new Vector3f(0, -DOWN_OFFSET, 0);
+            case POINT -> new Vector3f(0, 0, FRONT_OFFSET);
+            default -> new Vector3f();
+        };
 
         // ピボットを設定
         pivotDirection = MatrixUtils.getLocationRotation(player.getEyeLocation());

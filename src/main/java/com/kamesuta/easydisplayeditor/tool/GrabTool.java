@@ -7,7 +7,9 @@ import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +38,39 @@ public class GrabTool implements Tool {
     @Override
     public ToolType getType() {
         return ToolType.GRAB;
+    }
+
+    /**
+     * プレイヤーの行列を取得する
+     *
+     * @param player プレイヤー
+     * @return プレイヤーの行列
+     */
+    private Matrix4f getPlayerMatrix(Player player) {
+        return switch (session.pivot.mode) {
+            case NONE -> MatrixUtils.getLocationMatrix(player.getEyeLocation());
+            case POINT -> new Matrix4f()
+                    .translate(session.pivot.pivot)
+                    .rotate(MatrixUtils.getLocationRotation(player.getEyeLocation()));
+            case LINE -> {
+                // プレイヤーの視線ベクトル
+                Vector3f look = player.getEyeLocation().getDirection().toVector3f();
+                // ピボット線(回転軸)のベクトル
+                Vector3f axis = session.pivot.pivotDirection.transform(new Vector3f(0, 0, 1));
+                // プレイヤーの視線ベクトルを回転軸と垂直な平面に射影したベクトル
+                Vector3f lookAxis = new Vector3f(look).sub(new Vector3f(axis).mul(look.dot(axis))).normalize();
+                // ピボット線(回転軸)と垂直な基準ベクトル
+                Vector3f baseAxis = session.pivot.pivotDirection.transform(new Vector3f(1, 0, 0));
+                // 回転軸と垂直な平面上にある視線ベクトルと基準ベクトルに直交するベクトル
+                Vector3f crossAxis = new Vector3f(baseAxis).cross(lookAxis).normalize();
+                // 回転軸と垂直な平面上にある視線ベクトルと基準ベクトルのなす角
+                float angle = (float) Math.acos(baseAxis.dot(lookAxis));
+                // 軸を中心になす角だけ回転する行列
+                yield new Matrix4f()
+                        .translate(session.pivot.pivot)
+                        .rotate(new AxisAngle4f(angle, crossAxis));
+            }
+        };
     }
 
     @Override
@@ -88,7 +123,7 @@ public class GrabTool implements Tool {
             // Grab中ではない場合
 
             // (Zero -> Player)' = Player -> Zero
-            Matrix4f playerMatrixInvert = MatrixUtils.getLocationMatrix(player.getEyeLocation()).invert();
+            Matrix4f playerMatrixInvert = getPlayerMatrix(player).invert();
 
             // 一旦クリア
             selected.clear();
@@ -127,7 +162,7 @@ public class GrabTool implements Tool {
         Player player = session.player;
 
         // Zero -> Player
-        Matrix4f playerMatrix = MatrixUtils.getLocationMatrix(player.getEyeLocation());
+        Matrix4f playerMatrix = getPlayerMatrix(player);
 
         // Grab対象を更新する
         for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
@@ -141,13 +176,13 @@ public class GrabTool implements Tool {
             Matrix4f displayMatrixInvert = MatrixUtils.getLocationMatrix(display.getLocation()).invert();
 
             // Old DisplayLocal -> New DisplayLocal
-            Matrix4f matrix4f = new Matrix4f()
+            Matrix4f displayLocalMatrix = new Matrix4f()
                     .mul(displayMatrixInvert)
                     .mul(playerMatrix)
                     .mul(offsetMatrix);
 
             // 変換を適用する
-            display.setTransformationMatrix(matrix4f);
+            display.setTransformationMatrix(displayLocalMatrix);
             display.setInterpolationDelay(0);
             display.setInterpolationDuration(1);
         }
