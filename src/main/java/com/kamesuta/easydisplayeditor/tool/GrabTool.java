@@ -57,16 +57,16 @@ public class GrabTool implements Tool {
                 // pivotDirection = (0, 0, 1) -> line
                 // rotation の axis成分の回転を取り出す
 
-                //Quaternionf rotation = MatrixUtils.getLocationRotation(player.getEyeLocation());
                 Vector3f look = player.getEyeLocation().getDirection().toVector3f();
                 Vector3f axis = session.pivot.pivotDirection.transform(new Vector3f(0, 0, 1));
+                Vector3f axisLook = new Vector3f(look).sub(new Vector3f(axis).mul(look.dot(axis))).normalize();
                 Vector3f baseAxis = session.pivot.pivotDirection.transform(new Vector3f(1, 0, 0));
-                Vector3f axisLook = new Vector3f(look).sub(axis.mul(look.dot(axis))).normalize();
+                Vector3f crossAxis = new Vector3f(baseAxis).cross(axisLook).normalize();
                 // baseAxisとaxisLookのなす角を求める
                 float angle = (float) Math.acos(baseAxis.dot(axisLook));
                 yield new Matrix4f()
                         .translate(session.pivot.pivot)
-                        .rotate(new AxisAngle4f(angle, axis));
+                        .rotate(new AxisAngle4f(angle, crossAxis));
             }
         };
     }
