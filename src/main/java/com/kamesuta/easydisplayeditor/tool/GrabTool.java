@@ -7,7 +7,10 @@ import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +39,36 @@ public class GrabTool implements Tool {
     @Override
     public ToolType getType() {
         return ToolType.GRAB;
+    }
+
+    /**
+     * プレイヤーの行列を取得する
+     *
+     * @param player プレイヤー
+     * @return プレイヤーの行列
+     */
+    private Matrix4f getPlayerMatrix(Player player) {
+        return switch (session.pivot.mode) {
+            case NONE -> MatrixUtils.getLocationMatrix(player.getEyeLocation());
+            case POINT -> new Matrix4f()
+                    .translate(session.pivot.pivot)
+                    .rotate(MatrixUtils.getLocationRotation(player.getEyeLocation()));
+            case LINE -> {
+                // pivotDirection = (0, 0, 1) -> line
+                // rotation の axis成分の回転を取り出す
+
+                //Quaternionf rotation = MatrixUtils.getLocationRotation(player.getEyeLocation());
+                Vector3f look = player.getEyeLocation().getDirection().toVector3f();
+                Vector3f axis = session.pivot.pivotDirection.transform(new Vector3f(0, 0, 1));
+                Vector3f baseAxis = session.pivot.pivotDirection.transform(new Vector3f(1, 0, 0));
+                Vector3f axisLook = new Vector3f(look).sub(axis.mul(look.dot(axis))).normalize();
+                // baseAxisとaxisLookのなす角を求める
+                float angle = (float) Math.acos(baseAxis.dot(axisLook));
+                yield new Matrix4f()
+                        .translate(session.pivot.pivot)
+                        .rotate(new AxisAngle4f(angle, axis));
+            }
+        };
     }
 
     @Override
@@ -88,7 +121,7 @@ public class GrabTool implements Tool {
             // Grab中ではない場合
 
             // (Zero -> Player)' = Player -> Zero
-            Matrix4f playerMatrixInvert = MatrixUtils.getLocationMatrix(player.getEyeLocation()).invert();
+            Matrix4f playerMatrixInvert = getPlayerMatrix(player).invert();
 
             // 一旦クリア
             selected.clear();
@@ -127,7 +160,7 @@ public class GrabTool implements Tool {
         Player player = session.player;
 
         // Zero -> Player
-        Matrix4f playerMatrix = MatrixUtils.getLocationMatrix(player.getEyeLocation());
+        Matrix4f playerMatrix = getPlayerMatrix(player);
 
         // Grab対象を更新する
         for (Map.Entry<BlockDisplay, Matrix4f> entry : selected.entrySet()) {
