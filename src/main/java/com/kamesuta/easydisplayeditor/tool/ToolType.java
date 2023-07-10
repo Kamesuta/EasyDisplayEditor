@@ -34,7 +34,7 @@ public enum ToolType {
     /**
      * ドットピボット (左クリック: ピボットを解除、右クリック: ピボットを設定、Shiftでスナップ)
      */
-    DOT_PIVOT,
+    PIVOT(PivotTool::new),
     /**
      * 線ピボット (左クリック: ピボットを解除、右クリック: ピボットを設定、Shiftでスナップ)
      */

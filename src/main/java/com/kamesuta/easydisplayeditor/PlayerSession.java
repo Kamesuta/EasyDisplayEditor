@@ -2,7 +2,7 @@ package com.kamesuta.easydisplayeditor;
 
 import com.kamesuta.easydisplayeditor.tool.Tool;
 import com.kamesuta.easydisplayeditor.tool.ToolType;
-import com.kamesuta.easydisplayeditor.util.Pivot;
+import com.kamesuta.easydisplayeditor.pivot.PivotDisplay;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 
@@ -35,7 +35,7 @@ public class PlayerSession {
     /**
      * ピボット
      */
-    public Pivot pivot = new Pivot();
+    public PivotDisplay pivotDisplay = new PivotDisplay();
 
     /**
      * コンストラクター
@@ -132,7 +132,7 @@ public class PlayerSession {
         }
 
         // ピボットの終了処理
-        pivot.onDisable();
+        pivotDisplay.onDisable();
 
         // 選択中のブロックディスプレイの発光を消す
         selected.forEach(display -> display.setGlowing(false));

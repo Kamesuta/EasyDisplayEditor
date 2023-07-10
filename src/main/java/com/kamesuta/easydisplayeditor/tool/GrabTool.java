@@ -1,8 +1,8 @@
 package com.kamesuta.easydisplayeditor.tool;
 
 import com.kamesuta.easydisplayeditor.PlayerSession;
+import com.kamesuta.easydisplayeditor.pivot.PivotDisplay;
 import com.kamesuta.easydisplayeditor.util.MatrixUtils;
-import com.kamesuta.easydisplayeditor.util.Pivot;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
@@ -47,52 +47,31 @@ public class GrabTool implements Tool {
      * @return プレイヤーの行列
      */
     private Matrix4f getPlayerMatrix(Player player) {
-        return switch (session.pivot.mode) {
+        PivotDisplay pivotDisplay = session.pivotDisplay;
+        return switch (pivotDisplay.mode) {
             case NONE -> MatrixUtils.getLocationMatrix(player.getEyeLocation());
             case POINT -> new Matrix4f()
-                    .translate(session.pivot.pivot)
+                    .translate(pivotDisplay.pivot.position())
                     .rotate(MatrixUtils.getLocationRotation(player.getEyeLocation()));
             case LINE -> {
                 // プレイヤーの視線ベクトル
                 Vector3f look = player.getEyeLocation().getDirection().toVector3f();
                 // ピボット線(回転軸)のベクトル
-                Vector3f axis = session.pivot.pivotDirection.transform(new Vector3f(0, 0, 1));
+                Vector3f axis = pivotDisplay.pivot.rotate().transform(new Vector3f(0, 0, 1));
                 // プレイヤーの視線ベクトルを回転軸と垂直な平面に射影したベクトル
                 Vector3f lookAxis = new Vector3f(look).sub(new Vector3f(axis).mul(look.dot(axis))).normalize();
                 // ピボット線(回転軸)と垂直な基準ベクトル
-                Vector3f baseAxis = session.pivot.pivotDirection.transform(new Vector3f(1, 0, 0));
+                Vector3f baseAxis = pivotDisplay.pivot.rotate().transform(new Vector3f(1, 0, 0));
                 // 回転軸と垂直な平面上にある視線ベクトルと基準ベクトルに直交するベクトル
                 Vector3f crossAxis = new Vector3f(baseAxis).cross(lookAxis).normalize();
                 // 回転軸と垂直な平面上にある視線ベクトルと基準ベクトルのなす角
                 float angle = (float) Math.acos(baseAxis.dot(lookAxis));
                 // 軸を中心になす角だけ回転する行列
                 yield new Matrix4f()
-                        .translate(session.pivot.pivot)
+                        .translate(pivotDisplay.pivot.position())
                         .rotate(new AxisAngle4f(angle, crossAxis));
             }
         };
-    }
-
-    @Override
-    public void onLeftClick() {
-        if (session.pivot.mode == Pivot.PivotType.NONE) {
-            // ピボットなしの場合
-            if (session.player.isSneaking()) {
-                // スニーク中の場合、線ピボットを配置
-                session.pivot.mode = Pivot.PivotType.LINE;
-            } else {
-                // スニーク中でない場合、点ピボットを配置
-                session.pivot.mode = Pivot.PivotType.POINT;
-            }
-        } else {
-            // ピボットありの場合、ピボットを削除
-            session.pivot.mode = Pivot.PivotType.NONE;
-        }
-
-        // ピボットの座標をプレイヤーの座標に設定
-        session.pivot.setPivot(session.player);
-        // ピボットの表示を更新
-        session.pivot.updateDisplay(session.player);
     }
 
     @Override

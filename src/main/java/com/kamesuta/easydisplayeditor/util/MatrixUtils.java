@@ -27,14 +27,28 @@ public class MatrixUtils {
     }
 
     /**
+     * Yaw, Pitchから回転を取得する
+     *
+     * @param yaw   Yaw
+     * @param pitch Pitch
+     * @return 回転
+     */
+    public static Quaternionf getYawPitchRotation(float yaw, float pitch) {
+        return new Quaternionf(new AxisAngle4f(yaw, 0, -1, 0))
+                .mul(new Quaternionf(new AxisAngle4f(pitch, 1, 0, 0)));
+    }
+
+    /**
      * ロケーションから回転を取得する
      *
      * @param location ロケーション
      * @return 回転
      */
     public static Quaternionf getLocationRotation(Location location) {
-        return new Quaternionf(new AxisAngle4f((float) Math.toRadians(location.getYaw()), 0, -1, 0))
-                .mul(new Quaternionf(new AxisAngle4f((float) Math.toRadians(location.getPitch()), 1, 0, 0)));
+        return getYawPitchRotation(
+                (float) Math.toRadians(location.getYaw()),
+                (float) Math.toRadians(location.getPitch())
+        );
     }
 
     /**
